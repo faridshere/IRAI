@@ -140,32 +140,21 @@ export async function callOpenAI({ userMessage, mode, outputFormat, structured, 
 
   const systemPrompt = buildSystemPrompt(mode, outputFormat, structured, enrichmentContext || '');
 
-  const body = {
-    model: 'gpt-4o',
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userMessage }
-    ],
-    temperature: 0.2,
-    max_tokens: 4096
-  };
+  const fullMessage = systemPrompt + '\n\nUser request: ' + userMessage;
 
-  if (structured) {
-    body.response_format = { type: 'json_object' };
-  }
-
-  const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+  const resp = await fetch('https://irai-sigma.vercel.app/api/chat', {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
+      'Content-Type': 'application/json'
     },
-    body: JSON.stringify(body)
+    body: JSON.stringify({
+      message: fullMessage
+    })
   });
 
   if (!resp.ok) {
     const errData = await resp.json().catch(() => ({}));
-    throw new Error(errData.error?.message || `OpenAI API error: ${resp.status}`);
+    throw new Error(errData.error?.message || errData.error || `API error: ${resp.status}`);
   }
 
   const data = await resp.json();
