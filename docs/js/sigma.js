@@ -309,7 +309,7 @@ export function sigmaToAQL(sigma) {
       let result = c.replace(/\bcontains\b/g, 'ILIKE');
       result = result.replace(/"/g, "'");
       result = result.replace(/ILIKE '([^']+)'/g, (_, val) => {
-        const escaped = val.replace(/'/g, "''").replace(/%/g, '\\%');
+        const escaped = val.replace(/\\/g, '\\\\').replace(/'/g, "''").replace(/%/g, '\\%');
         return `ILIKE '%${escaped}%'`;
       });
       return result;
