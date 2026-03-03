@@ -3,6 +3,8 @@
 
 import { CORTEX_FIELDS, CORTEX_DATASETS, QRADAR_FIELDS } from './fields.js';
 
+const XQL_RESERVED_KEYWORDS = ['dataset', 'config', 'preset', 'and', 'or', 'not', 'as', 'by', 'to', 'from', 'limit', 'fields', 'filter', 'alter', 'comp', 'dedup', 'sort', 'bin', 'timeframe', 'stage'];
+
 /**
  * Validate Cortex XDR XQL query
  * @param {string} xql - XQL query string
@@ -34,8 +36,7 @@ export function validateXQL(xql) {
   let match;
   while ((match = fieldPattern.exec(xql)) !== null) {
     const field = match[1];
-    const reserved = ['dataset', 'config', 'preset', 'and', 'or', 'not', 'as', 'by', 'to', 'from', 'limit', 'fields', 'filter', 'alter', 'comp', 'dedup', 'sort', 'bin', 'timeframe', 'stage'];
-    if (reserved.includes(field.toLowerCase())) continue;
+    if (XQL_RESERVED_KEYWORDS.includes(field.toLowerCase())) continue;
     if (!CORTEX_FIELDS.some(f => f.toLowerCase() === field.toLowerCase())) {
       warnings.push(`Possibly invalid Cortex XDR field: "${field}"`);
     }

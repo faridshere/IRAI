@@ -115,7 +115,7 @@ FROM events
 WHERE ProcessName IN ('powershell.exe','cmd.exe','wscript.exe','cscript.exe','mshta.exe','regsvr32.exe','rundll32.exe','certutil.exe','bitsadmin.exe')
   OR Command ILIKE '%encodedcommand%' OR Command ILIKE '%downloadstring%'
 ORDER BY starttime DESC
-LAST 1 HOURS`,
+LAST 1 HOUR`,
       cre_rule: {
         name: "Suspicious Process Execution Detected",
         severity: "Medium",

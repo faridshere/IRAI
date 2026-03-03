@@ -304,10 +304,16 @@ export function sigmaToAQL(sigma) {
   aql += `SELECT ${[...selectFields].join(', ')}\n`;
   aql += `FROM events\n`;
   if (conditions.length > 0) {
-    // Convert XQL-style operators to AQL
-    const aqlConditions = conditions.map(c =>
-      c.replace(/\bcontains\b/g, 'ILIKE').replace(/"/g, "'").replace(/ILIKE '([^']+)'/g, "ILIKE '%$1%'")
-    );
+    // Convert XQL-style operators to AQL, escaping special characters
+    const aqlConditions = conditions.map(c => {
+      let result = c.replace(/\bcontains\b/g, 'ILIKE');
+      result = result.replace(/"/g, "'");
+      result = result.replace(/ILIKE '([^']+)'/g, (_, val) => {
+        const escaped = val.replace(/'/g, "''").replace(/%/g, '\\%');
+        return `ILIKE '%${escaped}%'`;
+      });
+      return result;
+    });
     aql += `WHERE ${aqlConditions.join('\n  AND ')}`;
   }
   aql += `\nLAST 24 HOURS`;
