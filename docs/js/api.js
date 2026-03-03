@@ -142,7 +142,7 @@ export async function callOpenAI({ userMessage, mode, outputFormat, structured, 
 
   const fullMessage = systemPrompt + '\n\nUser request: ' + userMessage;
 
-  const resp = await fetch('https://irai-sigma.vercel.app/api/chat', {
+  const resp = await fetch('/api/chat', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
