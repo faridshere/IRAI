@@ -1,11 +1,15 @@
 {
   "version": 2,
   "builds": [
-    { "src": "docs/**", "use": "@vercel/static" },
-    { "src": "api/chat.js", "use": "@vercel/node" }
+    { "src": "api/chat.js", "use": "@vercel/node" },
+    { "src": "docs/**", "use": "@vercel/static" }
   ],
   "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1" },
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1",
+      "methods": ["POST", "OPTIONS"]
+    },
     { "src": "/(.*)", "dest": "/docs/$1" }
   ]
 }
