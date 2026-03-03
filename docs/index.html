@@ -1,10 +1,199 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>IRAI</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IRAI – Cybersecurity AI Assistant</title>
+  <link rel="stylesheet" href="css/styles.css">
 </head>
-<body style="background:#0d0f14;color:white;font-family:Arial;text-align:center;padding-top:100px;">
-  <h1>🚀 IRAI is Live</h1>
-  <p>GitHub Pages deployment successful.</p>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-title">
+      <h1>🛡️ IRAI</h1>
+      <span class="subtitle">Cybersecurity AI Detection Assistant</span>
+    </div>
+    <div class="header-actions">
+      <button type="button" id="settings-toggle" class="btn btn-secondary btn-sm">⚙️ Settings ▶</button>
+    </div>
+  </header>
+
+  <div class="main-container">
+
+    <!-- Settings Panel -->
+    <div id="settings-panel" class="settings-panel collapsed">
+      <div class="settings-body">
+        <div class="setting-row">
+          <label for="api-key-input">OpenAI API Key</label>
+          <input type="password" id="api-key-input" placeholder="sk-..." autocomplete="new-password" class="api-key-field">
+          <button type="button" id="save-key-btn" class="btn btn-primary btn-sm">Save</button>
+          <button type="button" id="clear-key-btn" class="btn btn-danger btn-sm">Clear</button>
+          <span id="key-status" class="status-warn">⚠️ No API key set</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls-row">
+      <div class="control-group">
+        <label for="mode-select">Platform</label>
+        <select id="mode-select">
+          <option value="cortex">Cortex XDR</option>
+          <option value="qradar">QRadar SIEM</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label for="format-select">Output Format</label>
+        <select id="format-select">
+          <option value="rule">Detection Rule</option>
+          <option value="query">Query</option>
+          <option value="playbook">Playbook</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>Structured JSON</label>
+        <div class="toggle-container">
+          <input type="checkbox" id="structured-toggle" class="toggle" checked>
+        </div>
+      </div>
+      <div class="control-group">
+        <label>Threat Intel Enrichment</label>
+        <div class="toggle-container">
+          <input type="checkbox" id="enrich-toggle" class="toggle">
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button type="button" class="tab-btn active" data-tab="detect">🔍 Detection</button>
+      <button type="button" class="tab-btn" data-tab="sigma">📄 Sigma Converter</button>
+      <button type="button" class="tab-btn" data-tab="templates">📋 Templates</button>
+      <button type="button" class="tab-btn" data-tab="feeds">🌐 Threat Intel</button>
+    </div>
+
+    <!-- Detection Tab -->
+    <div class="tab-panel active" data-tab="detect">
+      <div class="card">
+        <div class="card-title">Detection Query</div>
+        <textarea id="query-input" rows="4" placeholder="Describe a threat to detect, e.g.: 'Detect PowerShell encoded command execution' or 'Create a rule for RDP brute force from external IPs'"></textarea>
+        <div class="submit-row">
+          <button type="button" id="submit-btn" class="btn btn-primary" disabled>🚀 Generate Detection</button>
+          <span id="feed-status" class="status-ok feed-status-text"></span>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div id="loading-indicator" class="loading hidden">
+        <div class="spinner"></div>
+        Generating detection content...
+      </div>
+
+      <!-- Output -->
+      <div id="output-area" class="output-area hidden">
+        <div class="card-title">Output</div>
+        <div class="output-container">
+          <pre id="output-content" class="output-content"></pre>
+        </div>
+        <div class="output-actions">
+          <button type="button" id="copy-btn" class="btn btn-secondary btn-sm">📋 Copy</button>
+          <button type="button" id="copy-json-btn" class="btn btn-secondary btn-sm">{ } Copy JSON</button>
+          <button type="button" id="export-btn" class="btn btn-secondary btn-sm">💾 Export File</button>
+        </div>
+      </div>
+
+      <!-- Validation -->
+      <div id="validation-area" class="validation-area hidden">
+        <div class="card-title">Validation</div>
+        <div id="validation-content"></div>
+      </div>
+    </div>
+
+    <!-- Sigma Tab -->
+    <div class="tab-panel" data-tab="sigma">
+      <div class="card">
+        <div class="card-title">Sigma Rule Converter</div>
+        <p class="card-description">
+          Paste a Sigma YAML rule below to convert it to Cortex XQL or QRadar AQL (selected via Platform above).
+        </p>
+        <div class="sigma-container">
+          <div>
+            <label class="field-label">SIGMA YAML INPUT</label>
+            <textarea id="sigma-input" rows="14" placeholder="title: Suspicious PowerShell Execution
+logsource:
+    category: process_creation
+    product: windows
+detection:
+    selection:
+        Image: '*\\powershell.exe'
+        CommandLine: '*-enc*'
+    condition: selection
+level: high
+tags:
+    - attack.execution
+    - attack.t1059.001"></textarea>
+            <button type="button" id="convert-sigma-btn" class="btn btn-primary convert-btn">🔄 Convert</button>
+          </div>
+          <div>
+            <label class="field-label">CONVERTED OUTPUT</label>
+            <div id="sigma-output" class="sigma-output">Converted output will appear here...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Templates Tab -->
+    <div class="tab-panel" data-tab="templates">
+      <div class="card">
+        <div class="card-title">Detection Templates</div>
+        <p class="card-description">
+          Load pre-built detection templates with correct field names for Cortex XDR or QRadar.
+        </p>
+        <div class="controls-row">
+          <select id="template-select" class="template-select-field">
+            <option value="">-- Select Template --</option>
+          </select>
+          <button type="button" id="load-template-btn" class="btn btn-primary">📥 Load Template</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Threat Intel Tab -->
+    <div class="tab-panel" data-tab="feeds">
+      <div class="card">
+        <div class="card-title">🔎 MITRE ATT&amp;CK Search</div>
+        <div class="controls-row">
+          <input type="text" id="mitre-search-input" placeholder="e.g. T1059 or lateral movement" class="search-field">
+          <button type="button" id="mitre-search-btn" class="btn btn-primary btn-sm">Search</button>
+        </div>
+        <div id="mitre-results" class="feed-results hidden"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">🔎 CVE Lookup (NVD)</div>
+        <div class="controls-row">
+          <input type="text" id="cve-input" placeholder="e.g. CVE-2021-44228" class="search-field">
+          <button type="button" id="cve-lookup-btn" class="btn btn-primary btn-sm">Lookup</button>
+        </div>
+        <div id="cve-results" class="feed-results hidden"></div>
+      </div>
+      <div class="card">
+        <p class="card-description">
+          <strong>Open-source feeds integrated:</strong><br>
+          • MITRE ATT&amp;CK Enterprise (live search)<br>
+          • NVD CVE API (live lookup)<br>
+          • Sigma HQ Rules (GitHub reference)<br>
+          • Elastic Detection Rules (GitHub reference)<br>
+          • OCSF Schema (field mapping reference)
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Toast notification -->
+  <div id="toast" class="toast"></div>
+
+  <script type="module" src="js/app.js"></script>
 </body>
 </html>
