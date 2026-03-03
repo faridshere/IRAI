@@ -2,8 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const multer = require('multer');
 const OpenAI = require('openai');
+const rateLimit = require('express-rate-limit');
 const path = require('path');
-const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -79,10 +79,25 @@ When writing queries or rules, use proper code blocks and explain the logic.`,
 };
 
 app.use(express.json({ limit: '10mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'docs')));
+
+// Rate limiters
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please slow down.' },
+});
+const staticLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Health check
-app.get('/api/health', (req, res) => {
+app.get('/api/health', apiLimiter, (req, res) => {
   const hasKey = !!(
     process.env.OPENAI_API_KEY &&
     process.env.OPENAI_API_KEY !== 'your_openai_api_key_here'
@@ -91,7 +106,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // Chat endpoint
-app.post('/api/chat', upload.single('image'), async (req, res) => {
+app.post('/api/chat', apiLimiter, upload.single('image'), async (req, res) => {
   try {
     const openai = getOpenAIClient();
     if (!openai) {
@@ -175,8 +190,8 @@ app.post('/api/chat', upload.single('image'), async (req, res) => {
 });
 
 // Serve frontend for all other routes
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+app.get('*', staticLimiter, (req, res) => {
+  res.sendFile(path.join(__dirname, 'docs', 'index.html'));
 });
 
 app.listen(PORT, () => {
